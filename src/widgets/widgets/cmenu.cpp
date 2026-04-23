@@ -483,12 +483,14 @@ void QMenuPrivate::ScrollerTearOffItem::updateScrollerRects(const QRect &rect) {
 // CMenuImpl
 // ======================================================================================
 
+static CMenu::CornerPreference g_defaultCornerPreference = CMenu::RoundSmall;
+
 class CMenuPrivate : public QObject {
 public:
     CMenu *q;
-    CMenu::CornerPreference cornerPreference = CMenu::RoundSmall;
+    CMenu::CornerPreference cornerPreference;
 
-    CMenuPrivate(CMenu *q) : q(q) {
+    CMenuPrivate(CMenu *q) : q(q), cornerPreference(g_defaultCornerPreference) {
         // Initialize Font
         q->setFont(qApp->font());
 
@@ -568,6 +570,14 @@ CMenu::CMenu(const QString &title, QWidget *parent) : CMenu(parent) {
 
 CMenu::~CMenu() {
     delete d;
+}
+
+void CMenu::setDefaultCornerPreference(CornerPreference preference) {
+    g_defaultCornerPreference = preference;
+}
+
+CMenu::CornerPreference CMenu::defaultCornerPreference() {
+    return g_defaultCornerPreference;
 }
 
 void CMenu::setCornerPreference(CornerPreference preference) {

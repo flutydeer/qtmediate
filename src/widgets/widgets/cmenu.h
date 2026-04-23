@@ -19,6 +19,9 @@ public:
     explicit CMenu(const QString &title, QWidget *parent = nullptr);
     ~CMenu();
 
+    static void setDefaultCornerPreference(CornerPreference preference);
+    static CornerPreference defaultCornerPreference();
+
     void setCornerPreference(CornerPreference preference);
     CornerPreference cornerPreference() const;
 
