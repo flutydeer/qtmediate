@@ -486,6 +486,7 @@ void QMenuPrivate::ScrollerTearOffItem::updateScrollerRects(const QRect &rect) {
 class CMenuPrivate : public QObject {
 public:
     CMenu *q;
+    CMenu::CornerPreference cornerPreference = CMenu::RoundSmall;
 
     CMenuPrivate(CMenu *q) : q(q) {
         // Initialize Font
@@ -533,7 +534,7 @@ private:
         constexpr int DWMWA_USE_IMMERSIVE_DARK_MODE_ = 20;
         constexpr int DWMWA_WINDOW_CORNER_PREFERENCE_ = 33;
         DWMNCRENDERINGPOLICY ncrp = DWMNCRP_ENABLED;
-        /*DWM_WINDOW_CORNER_PREFERENCE*/ INT dwcp = /*DWMWCP_ROUNDSMALL*/ 3;
+        INT dwcp = cornerPreference;
         UINT dark = 1;
         MARGINS margins = {mgn, mgn, mgn, mgn};
         Q_ASSERT(this->q->winId());
@@ -567,6 +568,14 @@ CMenu::CMenu(const QString &title, QWidget *parent) : CMenu(parent) {
 
 CMenu::~CMenu() {
     delete d;
+}
+
+void CMenu::setCornerPreference(CornerPreference preference) {
+    d->cornerPreference = preference;
+}
+
+CMenu::CornerPreference CMenu::cornerPreference() const {
+    return d->cornerPreference;
 }
 
 bool CMenu::event(QEvent *event) {
