@@ -26,7 +26,3 @@ qtmediate_add_library(${PROJECT_NAME} AUTOGEN
     SKIP_AUTOMOC collections global text
     PREFIX QM_CORE
 )
-
-if(QT_VERSION_MAJOR GREATER_EQUAL 6)
-    qm_link_qt(${PROJECT_NAME} PUBLIC Core5Compat)
-endif()

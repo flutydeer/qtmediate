@@ -6,7 +6,6 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QString>
-#include <QTextCodec>
 
 #include <QMCore/qmglobal.h>
 
