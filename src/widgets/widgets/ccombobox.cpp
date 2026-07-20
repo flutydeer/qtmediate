@@ -1,6 +1,8 @@
 #include "ccombobox.h"
 
+#include <QGuiApplication>
 #include <QListView>
+#include <QStyleHints>
 
 #ifdef Q_OS_WINDOWS
 #  include <dwmapi.h>
@@ -63,9 +65,16 @@ void CComboBox::showPopup() {
     constexpr int mgn = 1;
     constexpr int DWMWA_USE_IMMERSIVE_DARK_MODE_ = 20;
     constexpr int DWMWA_WINDOW_CORNER_PREFERENCE_ = 33;
+    constexpr int DWMWA_BORDER_COLOR_ = 34;
+    constexpr COLORREF DWMWA_COLOR_DEFAULT_ = 0xFFFFFFFF;
+    constexpr COLORREF DWMWA_COLOR_NONE_ = 0xFFFFFFFE;
     DWMNCRENDERINGPOLICY ncrp = DWMNCRP_ENABLED;
     INT dwcp = m_cornerPreference;
-    UINT dark = 1;
+#  if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    const UINT dark = QGuiApplication::styleHints()->colorScheme() != Qt::ColorScheme::Light;
+#  else
+    const UINT dark = 1;
+#  endif
     MARGINS margins = {mgn, mgn, mgn, mgn};
 
     HWND hwnd = reinterpret_cast<HWND>(popup->winId());
@@ -73,5 +82,11 @@ void CComboBox::showPopup() {
     DwmExtendFrameIntoClientArea(hwnd, &margins);
     DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_, &dark, sizeof(dark));
     DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE_, &dwcp, sizeof(dwcp));
+    // Update the border color for the current scheme: suppress the DWM border in light mode,
+    // keep the default one in dark mode. Do NOT force a synchronous non-client refresh here
+    // (SWP_FRAMECHANGED + RDW_UPDATENOW): those synchronous cross-process calls can flood
+    // dwm.exe and freeze the desktop compositor.
+    const COLORREF borderColor = dark ? DWMWA_COLOR_DEFAULT_ : DWMWA_COLOR_NONE_;
+    DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR_, &borderColor, sizeof(borderColor));
 #endif
 }

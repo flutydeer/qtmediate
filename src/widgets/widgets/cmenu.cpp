@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QFontMetrics>
+#include <QStyleHints>
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #  include <QDesktopWidget>
@@ -535,9 +536,16 @@ private:
         // Constants defined to make older Windows SDK happy
         constexpr int DWMWA_USE_IMMERSIVE_DARK_MODE_ = 20;
         constexpr int DWMWA_WINDOW_CORNER_PREFERENCE_ = 33;
+        constexpr int DWMWA_BORDER_COLOR_ = 34;
+        constexpr COLORREF DWMWA_COLOR_DEFAULT_ = 0xFFFFFFFF;
+        constexpr COLORREF DWMWA_COLOR_NONE_ = 0xFFFFFFFE;
         DWMNCRENDERINGPOLICY ncrp = DWMNCRP_ENABLED;
         INT dwcp = cornerPreference;
-        UINT dark = 1;
+#  if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+        const UINT dark = QGuiApplication::styleHints()->colorScheme() != Qt::ColorScheme::Light;
+#  else
+        const UINT dark = 1;
+#  endif
         MARGINS margins = {mgn, mgn, mgn, mgn};
         Q_ASSERT(this->q->winId());
         // Let DWM compose non-client area
@@ -555,6 +563,13 @@ private:
         // it doesn't look too off
         DwmSetWindowAttribute(reinterpret_cast<HWND>(this->q->winId()),
                               DWMWA_WINDOW_CORNER_PREFERENCE_, &dwcp, sizeof(dwcp));
+        // Update the border color for the current scheme: suppress the DWM border in light
+        // mode, keep the default one in dark mode. Do NOT force a synchronous non-client
+        // refresh here (SWP_FRAMECHANGED + RDW_UPDATENOW): those synchronous cross-process
+        // calls can flood dwm.exe and freeze the compositor.
+        const COLORREF borderColor = dark ? DWMWA_COLOR_DEFAULT_ : DWMWA_COLOR_NONE_;
+        DwmSetWindowAttribute(reinterpret_cast<HWND>(this->q->winId()), DWMWA_BORDER_COLOR_,
+                              &borderColor, sizeof(borderColor));
         // Disconnect this connection, don't run again
         //        disconnect(q, &CMenu::aboutToShow, this, &CMenuPrivate::_q_menuFirstAboutToShow);
     }
